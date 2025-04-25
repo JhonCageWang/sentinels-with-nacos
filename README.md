@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Sentinel 控制台
 
 ## 0. 概述
@@ -69,5 +70,8 @@ docker build --build-arg SENTINEL_VERSION=1.8.8 -t ${REGISTRY}/sentinel-dashboar
 更多：[控制台功能介绍](./Sentinel_Dashboard_Feature.md)。
 
 
-add:
+# sentinels-with-nacos
+sentiment 保存规则到nacos 
+
 增加了 保存到nacos的 功能 目前只支持 限流 和 熔断  其余功能照抄即可 主要是要注意 JSON 结构 需要在客户端 进行解析处理
+
