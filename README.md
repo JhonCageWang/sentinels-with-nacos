@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Sentinel 控制台
 
 ## 0. 概述
@@ -74,4 +73,117 @@ docker build --build-arg SENTINEL_VERSION=1.8.8 -t ${REGISTRY}/sentinel-dashboar
 sentiment 保存规则到nacos 
 
 增加了 保存到nacos的 功能 目前只支持 限流 和 熔断  其余功能照抄即可 主要是要注意 JSON 结构 需要在客户端 进行解析处理
+
+
+默认格式是
+appName 在dashboard注册的appName 加上后缀 -flow-rules 其他同理
+scm-distributor-local-flow-rules
+scm-distributor-local-degrade-rules
+
+格式是这个样子
+
+
+[
+    {
+    "app": "scm-distributor-local",
+    "clusterConfig":
+    {
+    "acquireRefuseStrategy": 0,
+    "clientOfflineTime": 2000,
+    "fallbackToLocalWhenFail": true,
+    "resourceTimeout": 2000,
+    "resourceTimeoutStrategy": 0,
+    "sampleCount": 10,
+    "strategy": 0,
+    "thresholdType": 0,
+    "windowIntervalMs": 1000
+    },
+    "clusterMode": false,
+    "controlBehavior": 0,
+    "count": 20.0,
+    "gmtCreate": 1744781856148,
+    "gmtModified": 1744783960406,
+    "grade": 1,
+    "id": 1,
+    "ip": "192.168.192.202",
+    "limitApp": "default",
+    "port": 8719,
+    "resource": "RULE_PLATFORM_ERP_QYB",
+    "strategy": 0
+    },
+    {
+    "app": "scm-distributor-local-1",
+    "clusterConfig":
+    {
+    "acquireRefuseStrategy": 0,
+    "clientOfflineTime": 2000,
+    "fallbackToLocalWhenFail": true,
+    "resourceTimeout": 2000,
+    "resourceTimeoutStrategy": 0,
+    "sampleCount": 10,
+    "strategy": 0,
+    "thresholdType": 0,
+    "windowIntervalMs": 1000
+    },
+    "clusterMode": false,
+    "controlBehavior": 0,
+    "count": 20.0,
+    "gmtCreate": 1744781856148,
+    "gmtModified": 1744783960406,
+    "grade": 1,
+    "id": 1,
+    "ip": "192.168.192.202",
+    "limitApp": "default",
+    "port": 8719,
+    "resource": "RULE_PLATFORM_ERP_QYB",
+    "strategy": 0
+    }
+]
+
+客户端引入nacos包
+<dependency>
+<groupId>com.alibaba.csp</groupId>
+<artifactId>sentinel-datasource-nacos</artifactId>
+<version>1.8.6</version>
+</dependency>
+
+客户端手动配置 和 nacos 配置 只能生效一个  如果监听nacos 那么手动配置不会生效  因为移除了一个数据的监听
+
+
+### 
+Properties props = new Properties();
+props.put("namespace", "c6928d05-e9bc-4252-94fe-8e723984817e");
+props.put("serverAddr", "localhost:8848");
+String appName = AppNameUtil.getAppName();
+ReadableDataSource<String,List<FlowRule>> flowRuleDataSource =  new NacosDataSource<>(props, "DEFAULT_GROUP", appName+"-flow-rules",
+source -> {
+
+       List<FlowRuleEntity> ruleEntities = JSON.parseObject(source, new TypeReference<List<FlowRuleEntity>>() {});
+        String ip = HostNameUtil.getIp();
+        // String port = TransportConfig.getPort();
+        String port = TransportConfig.getRuntimePort()+"";
+        List<FlowRule> collect = ruleEntities.stream().filter(r -> {
+            if (StringUtils.isNotBlank(port)) {
+                return r.getIp().equals(ip) && r.getPort().equals(Integer.valueOf(port)) && appName.equals(r.getApp());
+            } else {
+                return r.getIp().equals(ip)  && appName.equals(r.getApp());
+            }
+        }).map(r -> JSON.parseObject(JSON.toJSONString(r),new TypeReference<FlowRule>() {})).collect(Collectors.toList());
+        return collect;
+    });
+FlowRuleManager.register2Property(flowRuleDataSource.getProperty());
+
+客户端监听是这个样子 通过appName和ip 以及端口进行过滤 
+
+其他注意事项
+熔断时长 必须是统计时长的2倍以上  至于为什么举个简单例子
+统计如果是 10s  熔断 10s 10秒包含了 熔断的十秒 不会被统计 当11秒 再去判断 其实就统计了 一秒的数据 本质上不希望这样
+统计是10s 熔断是5s 比如说从第2秒熔断 第一秒 失败了10个  到回复 是7秒  10秒统计的话 会统计到 第一秒的失败数据 会有误触发的风险
+
+统计时长10s 熔断30s
+
+
+统计时长越短 约长 采样越多 稳定性越高 统计时长越短 灵敏度越高 也有可能误判 针对不同场景设置不同的统计时长
+
+最少请求 主要是看流量低峰 避免误判
 
