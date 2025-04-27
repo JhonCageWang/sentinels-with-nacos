@@ -82,7 +82,7 @@ scm-distributor-local-degrade-rules
 
 格式是这个样子
 
-
+```json
 [
     {
     "app": "scm-distributor-local",
@@ -139,7 +139,7 @@ scm-distributor-local-degrade-rules
     "strategy": 0
     }
 ]
-
+```
 客户端引入nacos包
 <dependency>
 <groupId>com.alibaba.csp</groupId>
@@ -150,7 +150,7 @@ scm-distributor-local-degrade-rules
 客户端手动配置 和 nacos 配置 只能生效一个  如果监听nacos 那么手动配置不会生效  因为移除了一个数据的监听
 
 
-### 
+```java
 Properties props = new Properties();
 props.put("namespace", "c6928d05-e9bc-4252-94fe-8e723984817e");
 props.put("serverAddr", "localhost:8848");
@@ -172,6 +172,9 @@ source -> {
         return collect;
     });
 FlowRuleManager.register2Property(flowRuleDataSource.getProperty());
+```
+###
+其他注意事项
 
 客户端监听是这个样子 通过appName和ip 以及端口进行过滤 
 
