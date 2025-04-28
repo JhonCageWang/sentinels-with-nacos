@@ -195,3 +195,11 @@ FlowRuleManager.register2Property(flowRuleDataSource.getProperty());
 client端 时先把metric保存在内存 然后每秒刷盘一次 当文件过大 会循环写
 dashboard读取时 从内存读取 根据文件记录 做聚合展示 
 
+dashboard 的数据来源 一部分是 心跳上报  一部分是 dashboard调用client  
+clinet 启动一个serversocket 端口是配置的 如果冲突 可以下探 源码部分在 SimpleHttpCommandCenter
+基本上都是通过SPIload加载实现的
+提供的api都下载META-INF\service 下面文件的配置中了  com.alibaba.csp.sentinel.transport.CommandCenter 这个文件中定义了所有的API
+
+
+
+
