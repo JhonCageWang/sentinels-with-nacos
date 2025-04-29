@@ -15,6 +15,7 @@
  */
 package com.alibaba.csp.sentinel.dashboard.repository.metric;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -57,4 +58,5 @@ public interface MetricsRepository<T> {
      * @return list of resources
      */
     List<String> listResourcesOfApp(String app);
+    default List<String> listResourcesOfApp(String app,Integer pageSize, Integer curPage) {return new ArrayList<>();};
 }

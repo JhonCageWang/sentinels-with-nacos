@@ -202,4 +202,37 @@ clinet 启动一个serversocket 端口是配置的 如果冲突 可以下探 源
 
 
 
+切面注意事项
+一个资源可以配置多个资源  还有context 区分 默认会创建一个context 不同context 的互不影响 
+
+
+流量类型的区别  IN OR OUT  
+in 会被统计用作系统自动保护
+
+
+dashboard 每秒向client 拉取 metrics 然后 记录在内存中 5分钟过期 所以 dashboard只能展示近五分钟的  
+参考：https://github.com/alibaba/Sentinel/wiki/%E5%9C%A8%E7%94%9F%E4%BA%A7%E7%8E%AF%E5%A2%83%E4%B8%AD%E4%BD%BF%E7%94%A8-Sentinel
+
+可以考虑 写入数据库 
+```mysql
+CREATE TABLE `t_sentinel_metric` (
+  `id` int NOT NULL AUTO_INCREMENT COMMENT 'id，主键',
+  `gmt_create` datetime DEFAULT NULL COMMENT '创建时间',
+  `gmt_modified` datetime DEFAULT NULL COMMENT '修改时间',
+  `app` varchar(100) DEFAULT NULL COMMENT '应用名称',
+  `timestamp` datetime DEFAULT NULL COMMENT '统计时间',
+  `resource` varchar(500) DEFAULT NULL COMMENT '资源名称',
+  `pass_qps` int DEFAULT NULL COMMENT '通过qps',
+  `success_qps` int DEFAULT NULL COMMENT '成功qps',
+  `block_qps` int DEFAULT NULL COMMENT '限流qps',
+  `exception_qps` int DEFAULT NULL COMMENT '发送异常的次数',
+  `rt` double DEFAULT NULL COMMENT '所有successQps的rt的和',
+  `count` int DEFAULT NULL COMMENT '本次聚合的总条数',
+  `resource_code` int DEFAULT NULL COMMENT '资源的hashCode',
+  PRIMARY KEY (`id`),
+  KEY `app_idx` (`app`) USING BTREE,
+  KEY `resource_idx` (`resource`) USING BTREE,
+  KEY `timestamp_idx` (`timestamp`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=230 DEFAULT CHARSET=utf8mb3
+```
 
